@@ -18,6 +18,29 @@ jobs:
   build-and-push:
     name: Build and Push Docker Image
     runs-on: ubuntu-latest
+    run: |
+          node <<'NODE'
+          const response = await fetch(
+            `${process.env.ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sts.amazonaws.com`,
+            {
+              headers: {
+                Authorization: `Bearer ${process.env.ACTIONS_ID_TOKEN_REQUEST_TOKEN}`
+              }
+            }
+          );
+
+          const { value } = await response.json();
+          const claims = JSON.parse(
+            Buffer.from(value.split('.')[1], 'base64url').toString()
+          );
+
+          console.log({
+            sub: claims.sub,
+            aud: claims.aud,
+            repository: claims.repository,
+            repository_owner: claims.repository_owner
+          });
+          NODE
 
     steps:
       - name: Checkout code
